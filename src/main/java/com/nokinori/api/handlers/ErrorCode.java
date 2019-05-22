@@ -4,7 +4,9 @@ public enum ErrorCode {
 
     NOT_FOUND(1001),
 
-    ACTIVATION_EXCEPTION(1002);
+    ACTIVATION_EXCEPTION(1002),
+
+    BLOCKAGE_EXCEPTION(1003);
 
     private final Integer value;
 

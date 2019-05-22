@@ -3,6 +3,7 @@ package com.nokinori.api.handlers;
 import com.nokinori.api.io.ErrorRs;
 import com.nokinori.services.exceptions.NotFoundException;
 import com.nokinori.services.exceptions.SimCardActivationException;
+import com.nokinori.services.exceptions.SimCardBlockageException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -53,12 +54,30 @@ public class CommonExceptionHandler extends ResponseEntityExceptionHandler {
     @ResponseBody
     @ExceptionHandler({SimCardActivationException.class})
     ResponseEntity<ErrorRs> activationExceptionHandler(SimCardActivationException ex) {
-        log.debug("Activation exception", ex);
+        log.debug("Exception while sim-card activation", ex);
         ErrorRs errorRs = ErrorRs.builder()
                 .errorCode(ErrorCode.ACTIVATION_EXCEPTION.value())
                 .errorText(ex.getMessage() != null ? ex.getMessage() : "Activation exception")
                 .timeStamp(now())
                 .build();
-        return new ResponseEntity<>(errorRs, HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(errorRs, HttpStatus.BAD_REQUEST);
+    }
+
+    /**
+     * Catches {@link SimCardBlockageException} and return {@link ErrorRs} with note found error code.
+     *
+     * @param ex the caught {@link SimCardBlockageException}.
+     * @return custom error response with activation exception error code.
+     */
+    @ResponseBody
+    @ExceptionHandler({SimCardBlockageException.class})
+    ResponseEntity<ErrorRs> blockageExceptionHandler(SimCardBlockageException ex) {
+        log.debug("Exception while sim-card blockage", ex);
+        ErrorRs errorRs = ErrorRs.builder()
+                .errorCode(ErrorCode.BLOCKAGE_EXCEPTION.value())
+                .errorText(ex.getMessage() != null ? ex.getMessage() : "Blockage exception")
+                .timeStamp(now())
+                .build();
+        return new ResponseEntity<>(errorRs, HttpStatus.BAD_REQUEST);
     }
 }
