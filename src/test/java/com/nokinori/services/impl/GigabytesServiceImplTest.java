@@ -169,7 +169,7 @@ public class GigabytesServiceImplTest {
 
     @Test
     public void getNotFound() {
-        expectNotFoundEx();
+        expectNotFoundEx(notExistId);
 
         service.get(notExistId);
     }
@@ -177,7 +177,7 @@ public class GigabytesServiceImplTest {
 
     @Test
     public void addNotFound() {
-        expectNotFoundEx();
+        expectNotFoundEx(notExistId);
 
         service.add(notExistId, amount);
 
@@ -186,7 +186,7 @@ public class GigabytesServiceImplTest {
 
     @Test
     public void subtractNotFound() {
-        expectNotFoundEx();
+        expectNotFoundEx(notExistId);
 
         service.subtract(notExistId, amount);
 
@@ -210,8 +210,13 @@ public class GigabytesServiceImplTest {
         }
     }
 
-    private void expectNotFoundEx() {
+    private void expectNotFoundEx(Long id) {
         exceptionRule.expect(NotFoundException.class);
+        exceptionRule.expectMessage("Sim-card with id: " + id + " not found");
     }
 
+    private void expectNotFoundEx() {
+        exceptionRule.expect(NotFoundException.class);
+        exceptionRule.expectMessage("Sim-card with id: " + simCardId + " doesn't have any packs");
+    }
 }

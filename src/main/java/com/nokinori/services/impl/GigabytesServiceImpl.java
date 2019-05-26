@@ -10,13 +10,15 @@ import com.nokinori.repository.entities.Pack;
 import com.nokinori.repository.entities.SimCard;
 import com.nokinori.services.Subtractor;
 import com.nokinori.services.api.BillingService;
-import com.nokinori.services.exceptions.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
+
+import static com.nokinori.services.exceptions.ExceptionGenerator.throwNotFoundException;
+import static com.nokinori.services.exceptions.ExceptionGenerator.throwPackNotFoundException;
 
 @Service("gigabytesService")
 public class GigabytesServiceImpl implements BillingService<SimCardRs> {
@@ -40,8 +42,7 @@ public class GigabytesServiceImpl implements BillingService<SimCardRs> {
     @TraceLog
     @Transactional
     public SimCardRs get(Long id) {
-        List<GigabytesPack> gigabytes = repo.findById(id)
-                .orElseThrow(NotFoundException::new)
+        List<GigabytesPack> gigabytes = findById(id)
                 .getGigabytesPacks();
 
         return SimCardRs.builder()
@@ -54,8 +55,7 @@ public class GigabytesServiceImpl implements BillingService<SimCardRs> {
     @TraceLog
     @Transactional
     public void add(Long id, Integer amount) {
-        SimCard simCard = repo.findById(id)
-                .orElseThrow(NotFoundException::new);
+        SimCard simCard = findById(id);
 
         simCard.getGigabytesPacks()
                 .add(createGigabytes(simCard, amount));
@@ -66,12 +66,11 @@ public class GigabytesServiceImpl implements BillingService<SimCardRs> {
     @TraceLog
     @Transactional
     public void subtract(Long id, Integer amount) {
-        SimCard simCard = repo.findById(id)
-                .orElseThrow(NotFoundException::new);
+        SimCard simCard = findById(id);
 
         if (simCard.getGigabytesPacks()
                 .isEmpty()) {
-            throw new NotFoundException();
+            throwPackNotFoundException(id);
         }
 
         subtract(simCard, amount);
@@ -92,5 +91,10 @@ public class GigabytesServiceImpl implements BillingService<SimCardRs> {
         gigabytesPack.setExpiresAt(LocalDateTime.now()
                 .plusMinutes(config.getMinutesExpirationTime()));
         return gigabytesPack;
+    }
+
+    private SimCard findById(Long id) {
+        return repo.findById(id)
+                .orElseThrow(throwNotFoundException(id));
     }
 }

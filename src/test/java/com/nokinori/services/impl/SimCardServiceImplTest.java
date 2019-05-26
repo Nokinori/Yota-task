@@ -65,8 +65,7 @@ public class SimCardServiceImplTest {
 
     @Test
     public void alreadyActivated() {
-        exceptionRule.expect(SimCardActivationException.class);
-        exceptionRule.expectMessage("Sim-card already activated");
+        expectSimCardEx(true);
 
         simCard.setActive(true);
         service.activate(simCardId);
@@ -74,8 +73,7 @@ public class SimCardServiceImplTest {
 
     @Test
     public void alreadyBlocked() {
-        exceptionRule.expect(SimCardBlockageException.class);
-        exceptionRule.expectMessage("Sim-card already blocked");
+        expectSimCardEx(false);
 
         simCard.setActive(false);
         service.block(simCardId);
@@ -83,19 +81,31 @@ public class SimCardServiceImplTest {
 
     @Test
     public void simCardNotFoundForActivation() {
-        expectNotFoundEx();
+        expectNotFoundEx(notExistId);
 
         service.activate(notExistId);
     }
 
     @Test
     public void simCardNotFoundForBlockage() {
-        expectNotFoundEx();
+        expectNotFoundEx(notExistId);
 
         service.block(notExistId);
     }
 
-    private void expectNotFoundEx() {
+    private void expectNotFoundEx(Long id) {
         exceptionRule.expect(NotFoundException.class);
+        exceptionRule.expectMessage("Sim-card with id: " + id + " not found");
+    }
+
+    private void expectSimCardEx(boolean isActivated) {
+        String msg = "Sim-card with id: " + simCardId + " already ";
+        if (isActivated) {
+            exceptionRule.expect(SimCardActivationException.class);
+            exceptionRule.expectMessage(msg + "activated");
+        } else {
+            exceptionRule.expect(SimCardBlockageException.class);
+            exceptionRule.expectMessage(msg + "blocked");
+        }
     }
 }

@@ -10,13 +10,15 @@ import com.nokinori.repository.entities.Pack;
 import com.nokinori.repository.entities.SimCard;
 import com.nokinori.services.Subtractor;
 import com.nokinori.services.api.BillingService;
-import com.nokinori.services.exceptions.NotFoundException;
+import com.nokinori.services.exceptions.ExceptionGenerator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
+
+import static com.nokinori.services.exceptions.ExceptionGenerator.throwNotFoundException;
 
 @Service("minutesService")
 public class MinutesServiceImpl implements BillingService<SimCardRs> {
@@ -40,8 +42,7 @@ public class MinutesServiceImpl implements BillingService<SimCardRs> {
     @TraceLog
     @Transactional
     public SimCardRs get(Long id) {
-        List<MinutesPack> minutes = repo.findById(id)
-                .orElseThrow(NotFoundException::new)
+        List<MinutesPack> minutes = findById(id)
                 .getMinutesPacks();
 
         return SimCardRs.builder()
@@ -54,8 +55,7 @@ public class MinutesServiceImpl implements BillingService<SimCardRs> {
     @TraceLog
     @Transactional
     public void add(Long id, Integer amount) {
-        SimCard simCard = repo.findById(id)
-                .orElseThrow(NotFoundException::new);
+        SimCard simCard = findById(id);
 
         simCard.getMinutesPacks()
                 .add(createMinutesPack(simCard, amount));
@@ -66,12 +66,11 @@ public class MinutesServiceImpl implements BillingService<SimCardRs> {
     @TraceLog
     @Transactional
     public void subtract(Long id, Integer amount) {
-        SimCard simCard = repo.findById(id)
-                .orElseThrow(NotFoundException::new);
+        SimCard simCard = findById(id);
 
         if (simCard.getMinutesPacks()
                 .isEmpty()) {
-            throw new NotFoundException();
+            ExceptionGenerator.throwPackNotFoundException(id);
         }
 
         subtract(simCard, amount);
@@ -84,7 +83,6 @@ public class MinutesServiceImpl implements BillingService<SimCardRs> {
         repo.save(simCard);
     }
 
-
     private MinutesPack createMinutesPack(SimCard simCard, Integer amount) {
         MinutesPack minutesPack = new MinutesPack();
         minutesPack.setSimCard(simCard);
@@ -92,5 +90,10 @@ public class MinutesServiceImpl implements BillingService<SimCardRs> {
         minutesPack.setExpiresAt(LocalDateTime.now()
                 .plusMinutes(config.getMinutesExpirationTime()));
         return minutesPack;
+    }
+
+    private SimCard findById(Long id) {
+        return repo.findById(id)
+                .orElseThrow(throwNotFoundException(id));
     }
 }

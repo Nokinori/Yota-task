@@ -1,7 +1,14 @@
 package com.nokinori.services.exceptions;
 
+/**
+ * Exception for problems connected to sim-card activation process.
+ */
 public class SimCardActivationException extends RuntimeException {
-    public SimCardActivationException(String message) {
+
+    /**
+     * {@inheritDoc}
+     */
+    SimCardActivationException(String message) {
         super(message);
     }
 }
