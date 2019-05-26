@@ -1,80 +1,96 @@
 package com.nokinori.services.impl;
 
 import com.nokinori.aop.logging.TraceLog;
-import com.nokinori.api.io.MinutesRs;
+import com.nokinori.api.io.SimCardRs;
 import com.nokinori.configuration.Config;
 import com.nokinori.mappers.GenericMapper;
-import com.nokinori.repository.api.MinutesRepo;
-import com.nokinori.repository.entities.Minutes;
+import com.nokinori.repository.api.SimCardRepo;
+import com.nokinori.repository.entities.MinutesPack;
+import com.nokinori.repository.entities.Pack;
+import com.nokinori.repository.entities.SimCard;
+import com.nokinori.services.Subtractor;
 import com.nokinori.services.api.BillingService;
 import com.nokinori.services.exceptions.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
+import java.util.Comparator;
+import java.util.List;
 
 @Service("minutesService")
-public class MinutesServiceImpl implements BillingService<MinutesRs> {
+public class MinutesServiceImpl implements BillingService<SimCardRs> {
 
-    private final MinutesRepo minutesRepo;
+    private final SimCardRepo repo;
 
     private final Config config;
 
     private final GenericMapper mapper;
 
-    public MinutesServiceImpl(MinutesRepo minutesRepo, Config config, GenericMapper mapper) {
-        this.minutesRepo = minutesRepo;
+    private final Subtractor<MinutesPack> subtractor;
+
+    public MinutesServiceImpl(SimCardRepo repo, Config config, GenericMapper mapper, Subtractor<MinutesPack> subtractor) {
+        this.repo = repo;
         this.config = config;
         this.mapper = mapper;
+        this.subtractor = subtractor;
     }
 
     @Override
     @TraceLog
     @Transactional
-    public MinutesRs get(Long id) {
-        Minutes minutes = minutesRepo.findByUserId(id)
+    public SimCardRs get(Long id) {
+        List<MinutesPack> minutes = repo.findById(id)
+                .orElseThrow(NotFoundException::new)
+                .getMinutesPacks();
+
+        return SimCardRs.builder()
+                .simCardId(id)
+                .minutesPacks(mapper.toMinutesPacksRs(minutes))
+                .build();
+    }
+
+    @Override
+    @TraceLog
+    @Transactional
+    public void add(Long id, Integer amount) {
+        SimCard simCard = repo.findById(id)
                 .orElseThrow(NotFoundException::new);
-        return mapper.toMinutesRs(minutes);
+
+        simCard.getMinutesPacks()
+                .add(createMinutesPack(simCard, amount));
+        repo.save(simCard);
     }
 
     @Override
     @TraceLog
     @Transactional
-    public MinutesRs add(Long id, Long amount) {
-        Optional<Minutes> optionalMinutes = minutesRepo.findByUserId(id);
-        Minutes minutes = optionalMinutes.map(m -> plus(m, amount))
-                .orElseGet(() -> saveNew(id, amount));
-        return mapper.toMinutesRs(minutes);
-    }
-
-    @Override
-    @TraceLog
-    @Transactional
-    public MinutesRs subtract(Long id, Long amount) {
-        Optional<Minutes> optionalMinutes = minutesRepo.findByUserId(id);
-        Minutes minutes = optionalMinutes.map(m -> subtract(m, amount))
+    public void subtract(Long id, Integer amount) {
+        SimCard simCard = repo.findById(id)
                 .orElseThrow(NotFoundException::new);
-        return mapper.toMinutesRs(minutes);
+
+        if (simCard.getMinutesPacks()
+                .isEmpty()) {
+            throw new NotFoundException();
+        }
+
+        subtract(simCard, amount);
     }
 
-    private Minutes plus(Minutes minutes, Long amount) {
-        minutes.setAmount(minutes.getAmount() + amount);
-        return minutes;
+    private void subtract(SimCard simCard, Integer amount) {
+        List<MinutesPack> minutesPacks = simCard.getMinutesPacks();
+        minutesPacks.sort(Comparator.comparing(Pack::getExpiresAt));
+        subtractor.subtract(minutesPacks, amount);
+        repo.save(simCard);
     }
 
-    private Minutes subtract(Minutes minutes, Long amount) {
-        minutes.setAmount(minutes.getAmount() - amount);
-        return minutes;
-    }
 
-    private Minutes saveNew(Long id, Long amount) {
-        Minutes minutes = new Minutes();
-        minutes.setUserId(id);
-        minutes.setAmount(amount);
-        minutes.setExpiresAt(LocalDateTime.now()
+    private MinutesPack createMinutesPack(SimCard simCard, Integer amount) {
+        MinutesPack minutesPack = new MinutesPack();
+        minutesPack.setSimCard(simCard);
+        minutesPack.setAmount(amount);
+        minutesPack.setExpiresAt(LocalDateTime.now()
                 .plusMinutes(config.getMinutesExpirationTime()));
-        minutesRepo.save(minutes);
-        return minutes;
+        return minutesPack;
     }
 }

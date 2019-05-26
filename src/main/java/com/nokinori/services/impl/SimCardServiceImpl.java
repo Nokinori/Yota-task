@@ -2,7 +2,7 @@ package com.nokinori.services.impl;
 
 import com.nokinori.aop.logging.TraceLog;
 import com.nokinori.repository.api.SimCardRepo;
-import com.nokinori.repository.entities.SimCards;
+import com.nokinori.repository.entities.SimCard;
 import com.nokinori.services.api.SimCardService;
 import com.nokinori.services.exceptions.NotFoundException;
 import com.nokinori.services.exceptions.SimCardActivationException;
@@ -14,20 +14,20 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class SimCardServiceImpl implements SimCardService {
 
-    private final SimCardRepo simCardRepo;
+    private final SimCardRepo repo;
 
     @Autowired
-    public SimCardServiceImpl(SimCardRepo simCardRepo) {
-        this.simCardRepo = simCardRepo;
+    public SimCardServiceImpl(SimCardRepo repo) {
+        this.repo = repo;
     }
 
     @Override
     @TraceLog
     @Transactional
     public void activate(Long id) {
-        SimCards simCards = findSimCardByUserId(id);
-        if (!simCards.isActive())
-            simCards.setActive(true);
+        SimCard simCard = findSimCardById(id);
+        if (!simCard.isActive())
+            simCard.setActive(true);
         else
             throw new SimCardActivationException("Sim-card already activated");
     }
@@ -36,15 +36,15 @@ public class SimCardServiceImpl implements SimCardService {
     @TraceLog
     @Transactional
     public void block(Long id) {
-        SimCards simCards = findSimCardByUserId(id);
-        if (simCards.isActive())
-            simCards.setActive(false);
+        SimCard simCard = findSimCardById(id);
+        if (simCard.isActive())
+            simCard.setActive(false);
         else
             throw new SimCardBlockageException("Sim-card already blocked");
     }
 
-    private SimCards findSimCardByUserId(Long id) {
-        return simCardRepo.findByUserId(id)
+    private SimCard findSimCardById(Long id) {
+        return repo.findById(id)
                 .orElseThrow(NotFoundException::new);
     }
 }

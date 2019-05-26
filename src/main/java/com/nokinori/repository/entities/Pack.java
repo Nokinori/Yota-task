@@ -4,18 +4,17 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import javax.persistence.Column;
-import javax.persistence.Entity;
+import javax.persistence.MappedSuperclass;
 import java.time.LocalDateTime;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
-@Entity
-public class Minutes extends BaseEntity {
+@MappedSuperclass
+public class Pack extends BaseEntity {
 
     @Column
-    private Long amount;
+    private Integer amount;
 
     @Column
     private LocalDateTime expiresAt;
-
 }

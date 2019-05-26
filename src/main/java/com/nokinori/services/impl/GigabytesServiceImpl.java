@@ -1,81 +1,96 @@
 package com.nokinori.services.impl;
 
 import com.nokinori.aop.logging.TraceLog;
-import com.nokinori.api.io.GigabytesRs;
+import com.nokinori.api.io.SimCardRs;
 import com.nokinori.configuration.Config;
 import com.nokinori.mappers.GenericMapper;
-import com.nokinori.repository.api.GigabytesRepo;
-import com.nokinori.repository.entities.Gigabytes;
+import com.nokinori.repository.api.SimCardRepo;
+import com.nokinori.repository.entities.GigabytesPack;
+import com.nokinori.repository.entities.Pack;
+import com.nokinori.repository.entities.SimCard;
+import com.nokinori.services.Subtractor;
 import com.nokinori.services.api.BillingService;
 import com.nokinori.services.exceptions.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
+import java.util.Comparator;
+import java.util.List;
 
-@Service("gigabyteService")
-public class GigabytesServiceImpl implements BillingService<GigabytesRs> {
+@Service("gigabytesService")
+public class GigabytesServiceImpl implements BillingService<SimCardRs> {
 
-    private final GigabytesRepo gigabytesRepo;
+    private final SimCardRepo repo;
 
     private final Config config;
 
     private final GenericMapper mapper;
 
-    public GigabytesServiceImpl(GigabytesRepo gigabytesRepo, Config config, GenericMapper mapper) {
-        this.gigabytesRepo = gigabytesRepo;
+    private final Subtractor<GigabytesPack> subtractor;
+
+    public GigabytesServiceImpl(SimCardRepo repo, Config config, GenericMapper mapper, Subtractor<GigabytesPack> subtractor) {
+        this.repo = repo;
         this.config = config;
         this.mapper = mapper;
+        this.subtractor = subtractor;
     }
-
 
     @Override
     @TraceLog
     @Transactional
-    public GigabytesRs get(Long id) {
-        Gigabytes gigabytes = gigabytesRepo.findByUserId(id)
+    public SimCardRs get(Long id) {
+        List<GigabytesPack> gigabytes = repo.findById(id)
+                .orElseThrow(NotFoundException::new)
+                .getGigabytesPacks();
+
+        return SimCardRs.builder()
+                .simCardId(id)
+                .gigabytesPacks(mapper.toGigabytePacksRs(gigabytes))
+                .build();
+    }
+
+    @Override
+    @TraceLog
+    @Transactional
+    public void add(Long id, Integer amount) {
+        SimCard simCard = repo.findById(id)
                 .orElseThrow(NotFoundException::new);
-        return mapper.toGigabyteRs(gigabytes);
+
+        simCard.getGigabytesPacks()
+                .add(createGigabytes(simCard, amount));
+        repo.save(simCard);
     }
 
     @Override
     @TraceLog
     @Transactional
-    public GigabytesRs add(Long id, Long amount) {
-        Optional<Gigabytes> optionalMinutes = gigabytesRepo.findByUserId(id);
-        Gigabytes gigabytes = optionalMinutes.map(m -> plus(m, amount))
-                .orElseGet(() -> saveNew(id, amount));
-        return mapper.toGigabyteRs(gigabytes);
-    }
-
-    @Override
-    @TraceLog
-    @Transactional
-    public GigabytesRs subtract(Long id, Long amount) {
-        Optional<Gigabytes> optionalMinutes = gigabytesRepo.findByUserId(id);
-        Gigabytes gigabytes = optionalMinutes.map(m -> subtract(m, amount))
+    public void subtract(Long id, Integer amount) {
+        SimCard simCard = repo.findById(id)
                 .orElseThrow(NotFoundException::new);
-        return mapper.toGigabyteRs(gigabytes);
+
+        if (simCard.getGigabytesPacks()
+                .isEmpty()) {
+            throw new NotFoundException();
+        }
+
+        subtract(simCard, amount);
     }
 
-    private Gigabytes plus(Gigabytes gigabytes, Long amount) {
-        gigabytes.setAmount(gigabytes.getAmount() + amount);
-        return gigabytes;
+    private void subtract(SimCard simCard, Integer amount) {
+        List<GigabytesPack> gigabytesPacks = simCard.getGigabytesPacks();
+        gigabytesPacks.sort(Comparator.comparing(Pack::getExpiresAt));
+        subtractor.subtract(gigabytesPacks, amount);
+        repo.save(simCard);
     }
 
-    private Gigabytes subtract(Gigabytes gigabytes, Long amount) {
-        gigabytes.setAmount(gigabytes.getAmount() - amount);
-        return gigabytes;
-    }
 
-    private Gigabytes saveNew(Long id, Long amount) {
-        Gigabytes gigabytes = new Gigabytes();
-        gigabytes.setUserId(id);
-        gigabytes.setAmount(amount);
-        gigabytes.setExpiresAt(LocalDateTime.now()
+    private GigabytesPack createGigabytes(SimCard simCard, Integer amount) {
+        GigabytesPack gigabytesPack = new GigabytesPack();
+        gigabytesPack.setSimCard(simCard);
+        gigabytesPack.setAmount(amount);
+        gigabytesPack.setExpiresAt(LocalDateTime.now()
                 .plusMinutes(config.getMinutesExpirationTime()));
-        gigabytesRepo.save(gigabytes);
-        return gigabytes;
+        return gigabytesPack;
     }
 }

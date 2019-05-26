@@ -4,8 +4,8 @@ public interface BillingService<T> {
 
     T get(Long id);
 
-    T add(Long id, Long amount);
+    void add(Long id, Integer amount);
 
-    T subtract(Long id, Long amount);
+    void subtract(Long id, Integer amount);
 
 }

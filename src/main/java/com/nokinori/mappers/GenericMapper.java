@@ -2,16 +2,18 @@ package com.nokinori.mappers;
 
 import com.nokinori.api.io.GigabytesRs;
 import com.nokinori.api.io.MinutesRs;
-import com.nokinori.repository.entities.Gigabytes;
-import com.nokinori.repository.entities.Minutes;
+import com.nokinori.repository.entities.GigabytesPack;
+import com.nokinori.repository.entities.MinutesPack;
 import org.mapstruct.Mapper;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Mapper(componentModel = "spring")
 @Component
 public interface GenericMapper {
 
-    MinutesRs toMinutesRs(Minutes minutes);
+    List<MinutesRs> toMinutesPacksRs(List<MinutesPack> minutes);
 
-    GigabytesRs toGigabyteRs(Gigabytes gigabytes);
+    List<GigabytesRs> toGigabytePacksRs(List<GigabytesPack> gigabytes);
 }

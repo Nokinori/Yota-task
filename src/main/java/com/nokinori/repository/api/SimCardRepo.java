@@ -1,12 +1,9 @@
 package com.nokinori.repository.api;
 
-import com.nokinori.repository.entities.SimCards;
+import com.nokinori.repository.entities.SimCard;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
-
 @Repository
-public interface SimCardRepo extends BaseRepo<SimCards, Long> {
+public interface SimCardRepo extends BaseRepo<SimCard, Long> {
 
-    Optional<SimCards> findByUserId(Long id);
 }
