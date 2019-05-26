@@ -23,4 +23,9 @@ public class Properties {
      * Default value is 30 min
      */
     private Integer expirationTimeForGigabytesPack = 30;
+
+    /**
+     * Delay between TaskScheduler will run the task.
+     */
+    private Integer delayOfTimerServiceTaskExecutor;
 }
