@@ -2,7 +2,7 @@ package com.nokinori.services.impl;
 
 import com.nokinori.aop.logging.TraceLog;
 import com.nokinori.api.io.SimCardRs;
-import com.nokinori.configuration.Config;
+import com.nokinori.configuration.Properties;
 import com.nokinori.mappers.GenericMapper;
 import com.nokinori.repository.api.SimCardRepo;
 import com.nokinori.repository.entities.GigabytesPack;
@@ -25,15 +25,15 @@ public class GigabytesServiceImpl implements BillingService<SimCardRs> {
 
     private final SimCardRepo repo;
 
-    private final Config config;
+    private final Properties properties;
 
     private final GenericMapper mapper;
 
     private final Subtractor<GigabytesPack> subtractor;
 
-    public GigabytesServiceImpl(SimCardRepo repo, Config config, GenericMapper mapper, Subtractor<GigabytesPack> subtractor) {
+    public GigabytesServiceImpl(SimCardRepo repo, Properties properties, GenericMapper mapper, Subtractor<GigabytesPack> subtractor) {
         this.repo = repo;
-        this.config = config;
+        this.properties = properties;
         this.mapper = mapper;
         this.subtractor = subtractor;
     }
@@ -89,7 +89,7 @@ public class GigabytesServiceImpl implements BillingService<SimCardRs> {
         gigabytesPack.setSimCard(simCard);
         gigabytesPack.setAmount(amount);
         gigabytesPack.setExpiresAt(LocalDateTime.now()
-                .plusMinutes(config.getMinutesExpirationTime()));
+                .plusDays(properties.getExpirationTimeForGigabytesPack()));
         return gigabytesPack;
     }
 

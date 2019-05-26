@@ -2,7 +2,7 @@ package com.nokinori.services.impl;
 
 import com.nokinori.aop.logging.TraceLog;
 import com.nokinori.api.io.SimCardRs;
-import com.nokinori.configuration.Config;
+import com.nokinori.configuration.Properties;
 import com.nokinori.mappers.GenericMapper;
 import com.nokinori.repository.api.SimCardRepo;
 import com.nokinori.repository.entities.MinutesPack;
@@ -25,15 +25,15 @@ public class MinutesServiceImpl implements BillingService<SimCardRs> {
 
     private final SimCardRepo repo;
 
-    private final Config config;
+    private final Properties properties;
 
     private final GenericMapper mapper;
 
     private final Subtractor<MinutesPack> subtractor;
 
-    public MinutesServiceImpl(SimCardRepo repo, Config config, GenericMapper mapper, Subtractor<MinutesPack> subtractor) {
+    public MinutesServiceImpl(SimCardRepo repo, Properties properties, GenericMapper mapper, Subtractor<MinutesPack> subtractor) {
         this.repo = repo;
-        this.config = config;
+        this.properties = properties;
         this.mapper = mapper;
         this.subtractor = subtractor;
     }
@@ -88,7 +88,7 @@ public class MinutesServiceImpl implements BillingService<SimCardRs> {
         minutesPack.setSimCard(simCard);
         minutesPack.setAmount(amount);
         minutesPack.setExpiresAt(LocalDateTime.now()
-                .plusMinutes(config.getMinutesExpirationTime()));
+                .plusDays(properties.getExpirationTimeForMinutesPack()));
         return minutesPack;
     }
 

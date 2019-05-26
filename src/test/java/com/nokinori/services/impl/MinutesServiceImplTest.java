@@ -168,6 +168,64 @@ public class MinutesServiceImplTest {
     }
 
     @Test
+    public void subtractFromLatestSorted() {
+        int half = amount / 2;
+        addNPacksToEntity(2);
+
+        simCard.getMinutesPacks()
+                .get(0)
+                .setExpiresAt(now().plusDays(5));
+        simCard.getMinutesPacks()
+                .get(1)
+                .setExpiresAt(now().plusDays(10));
+
+        service.subtract(simCardId, half);
+
+        verify(repo).save(simCard);
+
+        assertEquals(2, simCard.getMinutesPacks()
+                .size());
+        assertEquals(half, simCard.getMinutesPacks()
+                .get(0)
+                .getAmount()
+                .longValue());
+
+        assertEquals(amount.longValue(), simCard.getMinutesPacks()
+                .get(1)
+                .getAmount()
+                .longValue());
+    }
+
+    @Test
+    public void subtractFromLatestUnSorted() {
+        int half = amount / 2;
+        addNPacksToEntity(2);
+
+        simCard.getMinutesPacks()
+                .get(0)
+                .setExpiresAt(now().plusDays(10));
+        simCard.getMinutesPacks()
+                .get(1)
+                .setExpiresAt(now().plusDays(5));
+
+        service.subtract(simCardId, half);
+
+        verify(repo).save(simCard);
+
+        assertEquals(2, simCard.getMinutesPacks()
+                .size());
+        assertEquals(half, simCard.getMinutesPacks()
+                .get(0)
+                .getAmount()
+                .longValue());
+
+        assertEquals(amount.longValue(), simCard.getMinutesPacks()
+                .get(1)
+                .getAmount()
+                .longValue());
+    }
+
+    @Test
     public void getNotFound() {
         expectNotFoundEx(notExistId);
 
