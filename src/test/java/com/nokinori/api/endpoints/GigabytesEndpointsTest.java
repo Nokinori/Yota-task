@@ -24,6 +24,7 @@ import static com.nokinori.api.endpoints.mappings.PathMappings.SIM_CARD_PATH;
 import static java.time.LocalDateTime.now;
 import static org.mockito.BDDMockito.willReturn;
 import static org.mockito.BDDMockito.willThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -37,13 +38,19 @@ public class GigabytesEndpointsTest {
 
     private final Long simCardId = 1001L;
 
+    private final Long wrongId = -1001L;
+
     private final String contextPath = CONTEXT_PATH;
 
     private final String uri = contextPath + SIM_CARD_PATH + "/" + simCardId;
 
+    private final String uriConstrainViolation = contextPath + SIM_CARD_PATH + "/" + wrongId;
+
     private final String gigabytesPath = GIGABYTES_PATH;
 
     private final Integer amount = 100;
+
+    private final Integer wrongAmount = 100;
 
     private final Supplier<GigabytesRs> gigabytesRsSupplier = () ->
             GigabytesRs.builder()
@@ -112,5 +119,40 @@ public class GigabytesEndpointsTest {
                 .andExpect(jsonPath("$.errorCode").value(ErrorCode.NOT_FOUND.value()));
 
         verify(service).get(simCardId);
+    }
+
+    @Test
+    public void checkValidationOnGet() throws Exception {
+        mvc.perform(get(uriConstrainViolation + gigabytesPath)
+                .contextPath(contextPath))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.errorCode").value(ErrorCode.VALIDATION_EXCEPTION.value()))
+                .andExpect(jsonPath("$.errorText").value("getGigabytes.id: must be greater than 0"));
+
+        verify(service, never()).get(wrongId);
+    }
+
+    @Test
+    public void checkValidationOnAdd() throws Exception {
+        mvc.perform(post(uriConstrainViolation + gigabytesPath)
+                .param("amount", wrongAmount.toString())
+                .contextPath(contextPath))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.errorCode").value(ErrorCode.VALIDATION_EXCEPTION.value()))
+                .andExpect(jsonPath("$.errorText").value("addGigabytes.id: must be greater than 0"));
+
+        verify(service, never()).add(wrongId, wrongAmount);
+    }
+
+    @Test
+    public void checkValidationOnSubtract() throws Exception {
+        mvc.perform(delete(uriConstrainViolation + gigabytesPath)
+                .param("amount", wrongAmount.toString())
+                .contextPath(contextPath))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.errorCode").value(ErrorCode.VALIDATION_EXCEPTION.value()))
+                .andExpect(jsonPath("$.errorText").value("subtractGigabytes.id: must be greater than 0"));
+
+        verify(service, never()).subtract(wrongId, wrongAmount);
     }
 }

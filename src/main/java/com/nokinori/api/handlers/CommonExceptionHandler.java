@@ -5,27 +5,23 @@ import com.nokinori.services.exceptions.NotFoundException;
 import com.nokinori.services.exceptions.SimCardActivationException;
 import com.nokinori.services.exceptions.SimCardBlockageException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+
+import javax.validation.ConstraintViolationException;
 
 import static java.time.LocalDateTime.now;
 
+/**
+ * Class that handel exception and wraps it to {@link ErrorRs}.
+ */
 @ControllerAdvice
 @Slf4j
 public class CommonExceptionHandler extends ResponseEntityExceptionHandler {
-
-    @Override
-    @ResponseBody
-    protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatus status, WebRequest request) {
-        return super.handleMethodArgumentNotValid(ex, headers, status, request);
-    }
 
     /**
      * Catches {@link NotFoundException} and return {@link ErrorRs} with note found error code.
@@ -79,5 +75,23 @@ public class CommonExceptionHandler extends ResponseEntityExceptionHandler {
                 .timeStamp(now())
                 .build();
         return new ResponseEntity<>(errorRs, HttpStatus.BAD_REQUEST);
+    }
+
+    /**
+     * Catches {@link ConstraintViolationException} and return {@link ErrorRs} with note found error code.
+     *
+     * @param ex the caught {@link ConstraintViolationException}.
+     * @return custom error response with activation exception error code.
+     */
+    @ResponseBody
+    @ExceptionHandler({ConstraintViolationException.class})
+    ResponseEntity<ErrorRs> constraintViolationException(ConstraintViolationException ex) {
+        log.debug("Exception while validating request params", ex);
+        ErrorRs errorRs = ErrorRs.builder()
+                .errorCode(ErrorCode.VALIDATION_EXCEPTION.value())
+                .errorText(ex.getMessage() != null ? ex.getMessage() : "Validation exception")
+                .timeStamp(now())
+                .build();
+        return new ResponseEntity<>(errorRs, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

@@ -21,6 +21,7 @@ import static com.nokinori.api.endpoints.mappings.PathMappings.SIM_CARD_PATH;
 import static org.mockito.BDDMockito.verify;
 import static org.mockito.BDDMockito.willDoNothing;
 import static org.mockito.BDDMockito.willThrow;
+import static org.mockito.Mockito.never;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -31,9 +32,13 @@ public class SimCardEndpointsTest {
 
     private final Long simCardId = 1001L;
 
+    private final Long wrongId = -1001L;
+
     private final String contextPath = CONTEXT_PATH;
 
     private final String uri = contextPath + SIM_CARD_PATH + "/" + simCardId;
+
+    private final String uriConstrainViolation = contextPath + SIM_CARD_PATH + "/" + wrongId;
 
     private final String activatePath = SIM_CARD_ACTIVATE_PATH;
 
@@ -125,6 +130,28 @@ public class SimCardEndpointsTest {
                 .andExpect(jsonPath("$.errorText").value("Blockage exception"));
 
         verify(service).block(simCardId);
+    }
+
+    @Test
+    public void checkValidationOnActivation() throws Exception {
+        mvc.perform(put(uriConstrainViolation + activatePath)
+                .contextPath(contextPath))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.errorCode").value(ErrorCode.VALIDATION_EXCEPTION.value()))
+                .andExpect(jsonPath("$.errorText").value("activateSimCard.id: must be greater than 0"));
+
+        verify(service, never()).block(simCardId);
+    }
+
+    @Test
+    public void checkValidationOnBlockage() throws Exception {
+        mvc.perform(put(uriConstrainViolation + blockPath)
+                .contextPath(contextPath))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.errorCode").value(ErrorCode.VALIDATION_EXCEPTION.value()))
+                .andExpect(jsonPath("$.errorText").value("blockSimCard.id: must be greater than 0"));
+
+        verify(service, never()).block(simCardId);
     }
 
 }
