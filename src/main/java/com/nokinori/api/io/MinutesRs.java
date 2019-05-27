@@ -7,6 +7,14 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+/**
+ * Interface object to be used in responses.
+ * {@link NoArgsConstructor}
+ * {@link AllArgsConstructor}
+ * is used for mapping by {@link com.nokinori.mappers.GenericMapper}.
+ *
+ * @see com.nokinori.mappers.GenericMapper
+ */
 @Data
 @Builder
 @NoArgsConstructor

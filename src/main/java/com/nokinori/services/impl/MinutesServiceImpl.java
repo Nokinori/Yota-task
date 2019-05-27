@@ -20,15 +20,30 @@ import java.util.List;
 
 import static com.nokinori.services.exceptions.ExceptionGenerator.throwNotFoundException;
 
+/**
+ * Service with operations for minutes packs.
+ */
 @Service("minutesService")
 public class MinutesServiceImpl implements BillingService<SimCardRs> {
 
+    /**
+     * Sim-card repository.
+     */
     private final SimCardRepo repo;
 
+    /**
+     * Properties holder.
+     */
     private final Properties properties;
 
+    /**
+     * Mapper for response types.
+     */
     private final GenericMapper mapper;
 
+    /**
+     * Subtraction class.
+     */
     private final Subtractor<MinutesPack> subtractor;
 
     public MinutesServiceImpl(SimCardRepo repo, Properties properties, GenericMapper mapper, Subtractor<MinutesPack> subtractor) {
@@ -38,6 +53,12 @@ public class MinutesServiceImpl implements BillingService<SimCardRs> {
         this.subtractor = subtractor;
     }
 
+    /**
+     * Get minutes packs for sim-card with id.
+     *
+     * @param id of entity.
+     * @return interface object with response values.
+     */
     @Override
     @TraceLog
     @Transactional
@@ -51,6 +72,12 @@ public class MinutesServiceImpl implements BillingService<SimCardRs> {
                 .build();
     }
 
+    /**
+     * Add new pack of minutes with defined amount.
+     *
+     * @param id     of entity.
+     * @param amount to be added.
+     */
     @Override
     @TraceLog
     @Transactional
@@ -62,6 +89,18 @@ public class MinutesServiceImpl implements BillingService<SimCardRs> {
         repo.save(simCard);
     }
 
+    /**
+     * Subtract from pack of minutes with defined amount.
+     * If amount more than remaining amount of one record connected to sim-card. The record will be deleted.
+     * <p>
+     * If amount more then remaining amount of one record but less then remaining amount of second record.
+     * The first record will be deleted, and rest amount will be subtract from second.
+     * <p>
+     * If amount less then remaining amount of one record. The amount will be subtracted from record.
+     *
+     * @param id     of entity.
+     * @param amount to be subtracted.
+     */
     @Override
     @TraceLog
     @Transactional

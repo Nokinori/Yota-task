@@ -5,6 +5,9 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * Interface object to be used in responses.
+ */
 @Data
 @Builder
 public class ErrorRs {

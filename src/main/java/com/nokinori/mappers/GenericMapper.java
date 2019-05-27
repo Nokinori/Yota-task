@@ -9,6 +9,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+/**
+ * MapStruct mapper for Interface objects.
+ */
 @Mapper(componentModel = "spring")
 @Component
 public interface GenericMapper {

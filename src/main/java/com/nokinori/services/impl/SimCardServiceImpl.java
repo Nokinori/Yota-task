@@ -5,22 +5,31 @@ import com.nokinori.repository.api.SimCardRepo;
 import com.nokinori.repository.entities.SimCard;
 import com.nokinori.services.api.SimCardService;
 import com.nokinori.services.exceptions.ExceptionGenerator;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import static com.nokinori.services.exceptions.ExceptionGenerator.throwNotFoundException;
 
+/**
+ * Service with operations for sim-card.
+ */
 @Service
 public class SimCardServiceImpl implements SimCardService {
 
+    /**
+     * Sim-card repository.
+     */
     private final SimCardRepo repo;
 
-    @Autowired
     public SimCardServiceImpl(SimCardRepo repo) {
         this.repo = repo;
     }
 
+    /**
+     * Activate sim-card.
+     *
+     * @param id of sim-card.
+     */
     @Override
     @TraceLog
     @Transactional
@@ -32,6 +41,11 @@ public class SimCardServiceImpl implements SimCardService {
             ExceptionGenerator.throwSimCardActivationException(id);
     }
 
+    /**
+     * Block sim-card.
+     *
+     * @param id of sim-card.
+     */
     @Override
     @TraceLog
     @Transactional

@@ -8,16 +8,28 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.stereotype.Component;
 
+/**
+ * Trace log aspect.
+ */
+@Slf4j
 @Aspect
 @Component
-@Slf4j
 public class LogAspect {
 
+    /**
+     * Pointcut where trace log must be executed.
+     */
     @Pointcut("@annotation(com.nokinori.aop.logging.TraceLog)")
     void loggable() {
         //empty
     }
 
+    /**
+     * Trace log that wraps invokes method.
+     *
+     * @param point the point to wrap.
+     * @return proceeded point.
+     */
     @Around("loggable()")
     @SneakyThrows
     public Object logAround(ProceedingJoinPoint point) {

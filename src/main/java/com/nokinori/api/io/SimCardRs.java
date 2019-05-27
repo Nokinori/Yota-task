@@ -8,6 +8,9 @@ import java.util.List;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include;
 
+/**
+ * Interface object to be used in responses.
+ */
 @Data
 @Builder
 public class SimCardRs {

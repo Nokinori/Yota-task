@@ -10,17 +10,29 @@ import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
 import java.time.LocalDateTime;
 
+/**
+ * Mapped super class for all entities.
+ */
 @MappedSuperclass
 @Data
 public abstract class BaseEntity {
 
+    /**
+     * The primary key.
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /**
+     * Creation time of entity.
+     */
     @CreationTimestamp
     private LocalDateTime createdAt;
 
+    /**
+     * Modification time of entity.
+     */
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 }
