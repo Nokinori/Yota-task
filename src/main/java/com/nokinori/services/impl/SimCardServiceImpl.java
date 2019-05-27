@@ -1,6 +1,8 @@
 package com.nokinori.services.impl;
 
 import com.nokinori.aop.annotations.TraceLog;
+import com.nokinori.api.io.SimCardRs;
+import com.nokinori.mappers.GenericMapper;
 import com.nokinori.repository.api.SimCardRepo;
 import com.nokinori.repository.entities.SimCard;
 import com.nokinori.services.api.SimCardService;
@@ -14,15 +16,21 @@ import static com.nokinori.services.exceptions.ExceptionGenerator.throwNotFoundE
  * Service with operations for sim-card.
  */
 @Service
-public class SimCardServiceImpl implements SimCardService {
+public class SimCardServiceImpl implements SimCardService<SimCardRs> {
 
     /**
      * Sim-card repository.
      */
     private final SimCardRepo repo;
 
-    public SimCardServiceImpl(SimCardRepo repo) {
+    /**
+     * Mapper for response types.
+     */
+    private final GenericMapper mapper;
+
+    public SimCardServiceImpl(SimCardRepo repo, GenericMapper mapper) {
         this.repo = repo;
+        this.mapper = mapper;
     }
 
     /**
@@ -55,6 +63,21 @@ public class SimCardServiceImpl implements SimCardService {
             simCard.setActive(false);
         else
             ExceptionGenerator.throwSimCardBlockageException(id);
+    }
+
+    /**
+     * Create new sim-card.
+     *
+     * @return Response with id of created sim-card.
+     */
+    @Override
+    @TraceLog
+    @Transactional
+    public SimCardRs createSimCard() {
+        SimCard simCard = new SimCard();
+        simCard.setActive(true);
+        repo.save(simCard);
+        return mapper.toSimCardRs(simCard);
     }
 
     private SimCard findById(Long id) {

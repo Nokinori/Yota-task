@@ -3,7 +3,7 @@ package com.nokinori.services.api;
 /**
  * Interface for sim-card services.
  */
-public interface SimCardService {
+public interface SimCardService<T> {
 
     /**
      * Activate sim-card.
@@ -18,4 +18,9 @@ public interface SimCardService {
      * @param id of sim-card.
      */
     void block(Long id);
+
+    /**
+     * Create new sim-card.
+     */
+    T createSimCard();
 }
