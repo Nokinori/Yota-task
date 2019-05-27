@@ -1,6 +1,5 @@
 package com.nokinori.api.endpoints;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.nokinori.api.io.SimCardRs;
 import com.nokinori.services.api.BillingService;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -19,7 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.constraints.Positive;
 
-import static com.fasterxml.jackson.annotation.JsonInclude.Include;
 import static com.nokinori.api.endpoints.mappings.PathMappings.GIGABYTES_PATH;
 import static com.nokinori.api.endpoints.mappings.PathMappings.SIM_CARD_PATH_WITH_ID_PARAM;
 
@@ -49,7 +47,6 @@ public class GigabytesEndpoints {
      * @param id of sim-card.
      */
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    @JsonInclude(Include.NON_NULL)
     public ResponseEntity<SimCardRs> getGigabytes(@PathVariable @Positive Long id) {
         SimCardRs rs = billingService.get(id);
         return ResponseEntity.ok(rs);

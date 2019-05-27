@@ -25,3 +25,6 @@
 Решение должно быть реализовано в виде самостоятельного jar файла и не должно требовать каких-либо других зависимостей для запуска.
 
 Ожидается высокая степень покрытия тестами.
+
+# Swagger documentation available on: **http://{adders}:{port}/{context-path}/swagger-ui.html**
+default is: http://localhost:8060/services/billing/swagger-ui.html
