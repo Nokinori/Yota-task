@@ -13,19 +13,19 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class Properties {
 
     /**
-     * Holder for "expiration-time-for-minutes-pack"
-     * Default value is 30 min
+     * Holder for "expiration-time-for-minutes-pack".
+     * Default value is 30 min.
      */
     private Integer expirationTimeForMinutesPack = 30;
 
     /**
-     * Holder for "expiration-time-for-gigabytes-pack"
-     * Default value is 30 min
+     * Holder for "expiration-time-for-gigabytes-pack".
+     * Default value is 30 min.
      */
     private Integer expirationTimeForGigabytesPack = 30;
 
     /**
-     * Delay between TaskScheduler will run the task.
+     * Cron expression for job with expired packs.
      */
-    private Integer delayOfTimerServiceTaskExecutor;
+    private String cronSchedulerForExpiredPacksJob = "0 * * ? * * *";
 }

@@ -6,6 +6,8 @@ import com.nokinori.repository.api.MinutesPackRepo;
 import com.nokinori.repository.entities.GigabytesPack;
 import com.nokinori.repository.entities.MinutesPack;
 import lombok.extern.slf4j.Slf4j;
+import org.quartz.Job;
+import org.quartz.JobExecutionContext;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,9 +16,9 @@ import java.time.LocalDateTime;
 /**
  * Task for that finds and deletes all expired packs.
  */
-@Component
 @Slf4j
-public class ExpiredPackTimerTask implements Runnable {
+@Component
+public class ExpiredPackTimerJob implements Job {
 
     /**
      * Minutes repository.
@@ -28,7 +30,7 @@ public class ExpiredPackTimerTask implements Runnable {
      */
     private final GigabytesPackRepo gigabytesPackRepo;
 
-    public ExpiredPackTimerTask(MinutesPackRepo minutesPackRepo, GigabytesPackRepo gigabytesPackRepo) {
+    public ExpiredPackTimerJob(MinutesPackRepo minutesPackRepo, GigabytesPackRepo gigabytesPackRepo) {
         this.minutesPackRepo = minutesPackRepo;
         this.gigabytesPackRepo = gigabytesPackRepo;
     }
@@ -39,7 +41,7 @@ public class ExpiredPackTimerTask implements Runnable {
     @Override
     @TraceLog
     @Transactional
-    public void run() {
+    public void execute(JobExecutionContext context) {
         deleteMinutesPacks();
         deleteGigabytesPacks();
     }
