@@ -85,7 +85,7 @@ public class CommonExceptionHandler extends ResponseEntityExceptionHandler {
      */
     @ResponseBody
     @ExceptionHandler({ConstraintViolationException.class})
-    ResponseEntity<ErrorRs> constraintViolationException(ConstraintViolationException ex) {
+    ResponseEntity<ErrorRs> constraintViolationExceptionHandler(ConstraintViolationException ex) {
         log.debug("Exception while validating request params", ex);
         ErrorRs errorRs = ErrorRs.builder()
                 .errorCode(ErrorCode.VALIDATION_EXCEPTION.value())

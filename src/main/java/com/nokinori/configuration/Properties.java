@@ -26,6 +26,7 @@ public class Properties {
 
     /**
      * Cron expression for job with expired packs.
+     * Default value is '0 * * ? * * *'.
      */
     private String cronSchedulerForExpiredPacksJob = "0 * * ? * * *";
 }

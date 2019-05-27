@@ -1,4 +1,4 @@
-package com.nokinori.services;
+package com.nokinori.services.utils;
 
 import com.nokinori.repository.entities.Pack;
 import org.springframework.stereotype.Component;
@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * Heller class for subtract operation.
+ * Helper class for subtract operation.
  *
  * @param <E> child of Pack entity.
  */
