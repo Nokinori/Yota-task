@@ -1,6 +1,7 @@
 package com.nokinori.services.impl;
 
-import com.nokinori.aop.logging.TraceLog;
+import com.nokinori.aop.annotations.RequireActivatedSimCard;
+import com.nokinori.aop.annotations.TraceLog;
 import com.nokinori.api.io.SimCardRs;
 import com.nokinori.configuration.Properties;
 import com.nokinori.mappers.GenericMapper;
@@ -80,6 +81,7 @@ public class GigabytesServiceImpl implements BillingService<SimCardRs> {
      */
     @Override
     @TraceLog
+    @RequireActivatedSimCard
     @Transactional
     public void add(Long id, Integer amount) {
         SimCard simCard = findById(id);
@@ -103,6 +105,7 @@ public class GigabytesServiceImpl implements BillingService<SimCardRs> {
      */
     @Override
     @TraceLog
+    @RequireActivatedSimCard
     @Transactional
     public void subtract(Long id, Integer amount) {
         SimCard simCard = findById(id);

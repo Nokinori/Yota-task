@@ -1,6 +1,6 @@
 package com.nokinori.services.timer;
 
-import com.nokinori.aop.logging.TraceLog;
+import com.nokinori.aop.annotations.TraceLog;
 import com.nokinori.repository.api.GigabytesPackRepo;
 import com.nokinori.repository.api.MinutesPackRepo;
 import com.nokinori.repository.entities.GigabytesPack;

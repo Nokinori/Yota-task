@@ -1,4 +1,4 @@
-package com.nokinori.aop.logging;
+package com.nokinori.aop.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -6,9 +6,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Marker annotation for methods where trace log must be done.
+ * Marker annotation for methods where validation for sim-card must be done.
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface TraceLog {
+public @interface RequireActivatedSimCard {
 }

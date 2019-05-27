@@ -1,6 +1,6 @@
 package com.nokinori.services.impl;
 
-import com.nokinori.aop.logging.TraceLog;
+import com.nokinori.aop.annotations.TraceLog;
 import com.nokinori.repository.api.SimCardRepo;
 import com.nokinori.repository.entities.SimCard;
 import com.nokinori.services.api.SimCardService;

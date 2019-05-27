@@ -43,6 +43,15 @@ public class ExceptionGenerator {
     }
 
     /**
+     * Method throws {@link SimCardBlockageException}.
+     *
+     * @param id to be in message.
+     */
+    public static void throwSimCardBlockageException(Long id, String msg) {
+        throw new SimCardBlockageException(SIM_CARD_WITH_ID + id + msg);
+    }
+
+    /**
      * Method throws {@link NotFoundException}.
      *
      * @param id to be in message.

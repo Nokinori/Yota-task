@@ -19,7 +19,7 @@ public class LogAspect {
     /**
      * Pointcut where trace log must be executed.
      */
-    @Pointcut("@annotation(com.nokinori.aop.logging.TraceLog)")
+    @Pointcut("@annotation(com.nokinori.aop.annotations.TraceLog)")
     void loggable() {
         //empty
     }
