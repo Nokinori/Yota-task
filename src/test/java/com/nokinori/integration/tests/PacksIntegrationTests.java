@@ -1,6 +1,7 @@
 package com.nokinori.integration.tests;
 
 import com.nokinori.api.handlers.ErrorCode;
+import com.nokinori.utils.JsonExpressions;
 import com.nokinori.utils.Operations;
 import org.junit.Before;
 import org.junit.Test;
@@ -11,9 +12,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static com.nokinori.utils.JsonExpressions.amountParameter;
-import static com.nokinori.utils.JsonExpressions.errorCode;
-import static com.nokinori.utils.JsonExpressions.errorText;
 import static com.nokinori.utils.TestDataHolder.amount;
 import static com.nokinori.utils.TestDataHolder.contextPath;
 import static com.nokinori.utils.TestDataHolder.gigabytesPath;
@@ -22,6 +20,7 @@ import static com.nokinori.utils.TestDataHolder.notExistId;
 import static com.nokinori.utils.TestDataHolder.simCardPath;
 import static com.nokinori.utils.TestDataHolder.wrongAmount;
 import static com.nokinori.utils.TestDataHolder.wrongId;
+import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -85,11 +84,11 @@ public class PacksIntegrationTests {
         Integer id = op.createSimCard();
         op.blockSimCard(id);
 
-        mvc.perform(delete(simCardPath + id + gigabytesPath).param(amountParameter, amount.toString())
+        mvc.perform(delete(simCardPath + id + gigabytesPath).param(JsonExpressions.AMOUNT_PARAMETER, amount.toString())
                 .contextPath(contextPath))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath(errorCode).value(ErrorCode.BLOCKAGE_EXCEPTION.value()))
-                .andExpect(jsonPath(errorText).value("Sim-card with id: " + id + " is blocked! Must be activated for this operation."));
+                .andExpect(jsonPath(JsonExpressions.ERROR_CODE).value(ErrorCode.BLOCKAGE_EXCEPTION.value()))
+                .andExpect(jsonPath(JsonExpressions.ERROR_TEXT).value("Sim-card with id: " + id + " is blocked! Must be activated for this operation."));
     }
 
     @Test
@@ -97,11 +96,11 @@ public class PacksIntegrationTests {
         Integer id = op.createSimCard();
         op.blockSimCard(id);
 
-        mvc.perform(post(simCardPath + id + gigabytesPath).param(amountParameter, amount.toString())
+        mvc.perform(post(simCardPath + id + gigabytesPath).param(JsonExpressions.AMOUNT_PARAMETER, amount.toString())
                 .contextPath(contextPath))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath(errorCode).value(ErrorCode.BLOCKAGE_EXCEPTION.value()))
-                .andExpect(jsonPath(errorText).value("Sim-card with id: " + id + " is blocked! Must be activated for this operation."));
+                .andExpect(jsonPath(JsonExpressions.ERROR_CODE).value(ErrorCode.BLOCKAGE_EXCEPTION.value()))
+                .andExpect(jsonPath(JsonExpressions.ERROR_TEXT).value("Sim-card with id: " + id + " is blocked! Must be activated for this operation."));
     }
 
     @Test
@@ -109,11 +108,11 @@ public class PacksIntegrationTests {
         Integer id = op.createSimCard();
         op.blockSimCard(id);
 
-        mvc.perform(delete(simCardPath + id + minutesPath).param(amountParameter, amount.toString())
+        mvc.perform(delete(simCardPath + id + minutesPath).param(JsonExpressions.AMOUNT_PARAMETER, amount.toString())
                 .contextPath(contextPath))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath(errorCode).value(ErrorCode.BLOCKAGE_EXCEPTION.value()))
-                .andExpect(jsonPath(errorText).value("Sim-card with id: " + id + " is blocked! Must be activated for this operation."));
+                .andExpect(jsonPath(JsonExpressions.ERROR_CODE).value(ErrorCode.BLOCKAGE_EXCEPTION.value()))
+                .andExpect(jsonPath(JsonExpressions.ERROR_TEXT).value("Sim-card with id: " + id + " is blocked! Must be activated for this operation."));
     }
 
     @Test
@@ -121,11 +120,11 @@ public class PacksIntegrationTests {
         Integer id = op.createSimCard();
         op.blockSimCard(id);
 
-        mvc.perform(post(simCardPath + id + minutesPath).param(amountParameter, amount.toString())
+        mvc.perform(post(simCardPath + id + minutesPath).param(JsonExpressions.AMOUNT_PARAMETER, amount.toString())
                 .contextPath(contextPath))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath(errorCode).value(ErrorCode.BLOCKAGE_EXCEPTION.value()))
-                .andExpect(jsonPath(errorText).value("Sim-card with id: " + id + " is blocked! Must be activated for this operation."));
+                .andExpect(jsonPath(JsonExpressions.ERROR_CODE).value(ErrorCode.BLOCKAGE_EXCEPTION.value()))
+                .andExpect(jsonPath(JsonExpressions.ERROR_TEXT).value("Sim-card with id: " + id + " is blocked! Must be activated for this operation."));
     }
 
     @Test
@@ -133,7 +132,7 @@ public class PacksIntegrationTests {
         mvc.perform(get(simCardPath + notExistId + gigabytesPath)
                 .contextPath(contextPath))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath(errorCode).value(ErrorCode.NOT_FOUND.value()));
+                .andExpect(jsonPath(JsonExpressions.ERROR_CODE).value(ErrorCode.NOT_FOUND.value()));
 
     }
 
@@ -142,7 +141,7 @@ public class PacksIntegrationTests {
         mvc.perform(get(simCardPath + notExistId + minutesPath)
                 .contextPath(contextPath))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath(errorCode).value(ErrorCode.NOT_FOUND.value()));
+                .andExpect(jsonPath(JsonExpressions.ERROR_CODE).value(ErrorCode.NOT_FOUND.value()));
 
     }
 
@@ -151,29 +150,33 @@ public class PacksIntegrationTests {
         mvc.perform(get(simCardPath + wrongId + minutesPath)
                 .contextPath(contextPath))
                 .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath(errorCode).value(ErrorCode.VALIDATION_EXCEPTION.value()))
-                .andExpect(jsonPath(errorText).value("getMinutes.id: must be greater than 0"));
+                .andExpect(jsonPath(JsonExpressions.ERROR_CODE).value(ErrorCode.VALIDATION_EXCEPTION.value()))
+                .andExpect(jsonPath(JsonExpressions.ERROR_TEXT).value("getMinutes.id: must be greater than 0"));
     }
 
     @Test
     public void checkValidationOnAddMin() throws Exception {
         mvc.perform(post(simCardPath + wrongId + minutesPath)
-                .param(amountParameter, wrongAmount.toString())
+                .param(JsonExpressions.AMOUNT_PARAMETER, wrongAmount.toString())
                 .contextPath(contextPath))
                 .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath(errorCode).value(ErrorCode.VALIDATION_EXCEPTION.value()))
-                .andExpect(jsonPath(errorText).value("addMinutes.id: must be greater than 0"));
+                .andExpect(jsonPath(JsonExpressions.ERROR_CODE).value(ErrorCode.VALIDATION_EXCEPTION.value()))
+                .andExpect(jsonPath(JsonExpressions.ERROR_TEXT, containsString("must be greater than 0")))
+                .andExpect(jsonPath(JsonExpressions.ERROR_TEXT, containsString("addMinutes.id")))
+                .andExpect(jsonPath(JsonExpressions.ERROR_TEXT, containsString("addMinutes.amount")));
 
     }
 
     @Test
     public void checkValidationOnSubtractMin() throws Exception {
         mvc.perform(delete(simCardPath + wrongId + minutesPath)
-                .param(amountParameter, wrongAmount.toString())
+                .param(JsonExpressions.AMOUNT_PARAMETER, wrongAmount.toString())
                 .contextPath(contextPath))
                 .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath(errorCode).value(ErrorCode.VALIDATION_EXCEPTION.value()))
-                .andExpect(jsonPath(errorText).value("subtractMinutes.id: must be greater than 0"));
+                .andExpect(jsonPath(JsonExpressions.ERROR_CODE).value(ErrorCode.VALIDATION_EXCEPTION.value()))
+                .andExpect(jsonPath(JsonExpressions.ERROR_TEXT, containsString("must be greater than 0")))
+                .andExpect(jsonPath(JsonExpressions.ERROR_TEXT, containsString("subtractMinutes.id")))
+                .andExpect(jsonPath(JsonExpressions.ERROR_TEXT, containsString("subtractMinutes.amount")));
 
     }
 
@@ -182,29 +185,33 @@ public class PacksIntegrationTests {
         mvc.perform(get(simCardPath + wrongId + gigabytesPath)
                 .contextPath(contextPath))
                 .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath(errorCode).value(ErrorCode.VALIDATION_EXCEPTION.value()))
-                .andExpect(jsonPath(errorText).value("getMinutes.id: must be greater than 0"));
+                .andExpect(jsonPath(JsonExpressions.ERROR_CODE).value(ErrorCode.VALIDATION_EXCEPTION.value()))
+                .andExpect(jsonPath(JsonExpressions.ERROR_TEXT).value("getGigabytes.id: must be greater than 0"));
     }
 
     @Test
     public void checkValidationOnAddGig() throws Exception {
         mvc.perform(post(simCardPath + wrongId + gigabytesPath)
-                .param(amountParameter, wrongAmount.toString())
+                .param(JsonExpressions.AMOUNT_PARAMETER, wrongAmount.toString())
                 .contextPath(contextPath))
                 .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath(errorCode).value(ErrorCode.VALIDATION_EXCEPTION.value()))
-                .andExpect(jsonPath(errorText).value("addMinutes.id: must be greater than 0"));
+                .andExpect(jsonPath(JsonExpressions.ERROR_CODE).value(ErrorCode.VALIDATION_EXCEPTION.value()))
+                .andExpect(jsonPath(JsonExpressions.ERROR_TEXT, containsString("must be greater than 0")))
+                .andExpect(jsonPath(JsonExpressions.ERROR_TEXT, containsString("addGigabytes.id")))
+                .andExpect(jsonPath(JsonExpressions.ERROR_TEXT, containsString("addGigabytes.amount")));
 
     }
 
     @Test
     public void checkValidationOnSubtractGig() throws Exception {
         mvc.perform(delete(simCardPath + wrongId + gigabytesPath)
-                .param(amountParameter, wrongAmount.toString())
+                .param(JsonExpressions.AMOUNT_PARAMETER, wrongAmount.toString())
                 .contextPath(contextPath))
                 .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath(errorCode).value(ErrorCode.VALIDATION_EXCEPTION.value()))
-                .andExpect(jsonPath(errorText).value("subtractMinutes.id: must be greater than 0"));
+                .andExpect(jsonPath(JsonExpressions.ERROR_CODE).value(ErrorCode.VALIDATION_EXCEPTION.value()))
+                .andExpect(jsonPath(JsonExpressions.ERROR_TEXT, containsString("must be greater than 0")))
+                .andExpect(jsonPath(JsonExpressions.ERROR_TEXT, containsString("subtractGigabytes.id")))
+                .andExpect(jsonPath(JsonExpressions.ERROR_TEXT, containsString("subtractGigabytes.amount")));
 
     }
 }

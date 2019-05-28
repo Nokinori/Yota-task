@@ -20,6 +20,9 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import static com.nokinori.utils.TestDataHolder.amount;
+import static com.nokinori.utils.TestDataHolder.notExistId;
+import static com.nokinori.utils.TestDataHolder.simCardId;
 import static java.time.LocalDateTime.now;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -31,12 +34,6 @@ import static org.mockito.Mockito.verify;
 @SpringBootTest
 @RunWith(SpringRunner.class)
 public class MinutesServiceImplTest {
-
-    private final Long notExistId = 999L;
-
-    private final Long simCardId = 1001L;
-
-    private final Integer amount = 100;
 
     @Rule
     public ExpectedException exceptionRule = ExpectedException.none();
@@ -61,6 +58,7 @@ public class MinutesServiceImplTest {
     @Before
     public void setUp() {
         simCard = new SimCard();
+        simCard.setActive(true);
         simCard.setId(simCardId);
 
         willReturn(Optional.of(simCard)).given(repo)

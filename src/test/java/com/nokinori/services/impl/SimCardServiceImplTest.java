@@ -18,6 +18,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.Optional;
 
+import static com.nokinori.utils.TestDataHolder.notExistId;
+import static com.nokinori.utils.TestDataHolder.simCardId;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.BDDMockito.willReturn;
@@ -26,9 +28,6 @@ import static org.mockito.BDDMockito.willReturn;
 @SpringBootTest
 public class SimCardServiceImplTest {
 
-    private final Long notExistId = 999L;
-
-    private final Long simCardId = 1001L;
     @Rule
     public ExpectedException exceptionRule = ExpectedException.none();
     @Autowired

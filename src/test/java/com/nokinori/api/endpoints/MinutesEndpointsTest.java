@@ -5,6 +5,7 @@ import com.nokinori.api.io.MinutesRs;
 import com.nokinori.api.io.SimCardRs;
 import com.nokinori.services.api.BillingService;
 import com.nokinori.services.exceptions.NotFoundException;
+import com.nokinori.utils.JsonExpressions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -19,9 +20,14 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.function.Supplier;
 
-import static com.nokinori.api.endpoints.mappings.PathMappings.CONTEXT_PATH;
-import static com.nokinori.api.endpoints.mappings.PathMappings.MINUTES_PATH;
-import static com.nokinori.api.endpoints.mappings.PathMappings.SIM_CARD_PATH;
+import static com.nokinori.utils.TestDataHolder.amount;
+import static com.nokinori.utils.TestDataHolder.contextPath;
+import static com.nokinori.utils.TestDataHolder.minutesPath;
+import static com.nokinori.utils.TestDataHolder.simCardId;
+import static com.nokinori.utils.TestDataHolder.simCardPath;
+import static com.nokinori.utils.TestDataHolder.wrongAmount;
+import static com.nokinori.utils.TestDataHolder.wrongId;
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.BDDMockito.willReturn;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.never;
@@ -36,21 +42,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(MinutesEndpoints.class)
 public class MinutesEndpointsTest {
 
-    private final Long simCardId = 1001L;
+    private final String uri = simCardPath + simCardId;
 
-    private final Long wrongId = -1001L;
-
-    private final String contextPath = CONTEXT_PATH;
-
-    private final String uri = contextPath + SIM_CARD_PATH + "/" + simCardId;
-
-    private final String uriConstrainViolation = contextPath + SIM_CARD_PATH + "/" + wrongId;
-
-    private final String minutesPath = MINUTES_PATH;
-
-    private final Integer amount = 100;
-
-    private final Integer wrongAmount = 100;
+    private final String uriConstrainViolation = simCardPath + wrongId;
 
     private final Supplier<MinutesRs> minutesRsSupplier = () ->
             MinutesRs.builder()
@@ -82,17 +76,17 @@ public class MinutesEndpointsTest {
         mvc.perform(get(uri + minutesPath)
                 .contextPath(contextPath))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.simCardId").value(simCardId))
-                .andExpect(jsonPath("$.minutesPacks[0].amount").value(amount))
-                .andExpect(jsonPath("$.minutesPacks[1].amount").value(amount))
-                .andExpect(jsonPath("$.gigabytesPacks").doesNotExist());
+                .andExpect(jsonPath(JsonExpressions.SIM_CARD_ID).value(simCardId))
+                .andExpect(jsonPath(JsonExpressions.MINUTES_PACKS + "[0].amount").value(amount))
+                .andExpect(jsonPath(JsonExpressions.MINUTES_PACKS + "[1].amount").value(amount))
+                .andExpect(jsonPath(JsonExpressions.GIGABYTES_PACKS).doesNotExist());
 
         verify(service).get(simCardId);
     }
 
     @Test
     public void addMinutesForSimCard() throws Exception {
-        mvc.perform(post(uri + minutesPath).param("amount", amount.toString())
+        mvc.perform(post(uri + minutesPath).param(JsonExpressions.AMOUNT_PARAMETER, amount.toString())
                 .contextPath(contextPath))
                 .andExpect(status().isCreated());
 
@@ -101,7 +95,7 @@ public class MinutesEndpointsTest {
 
     @Test
     public void deleteMinutesForSimCard() throws Exception {
-        mvc.perform(delete(uri + minutesPath).param("amount", amount.toString())
+        mvc.perform(delete(uri + minutesPath).param(JsonExpressions.AMOUNT_PARAMETER, amount.toString())
                 .contextPath(contextPath))
                 .andExpect(status().isNoContent());
 
@@ -116,7 +110,7 @@ public class MinutesEndpointsTest {
         mvc.perform(get(uri + minutesPath)
                 .contextPath(contextPath))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.errorCode").value(ErrorCode.NOT_FOUND.value()));
+                .andExpect(jsonPath(JsonExpressions.ERROR_CODE).value(ErrorCode.NOT_FOUND.value()));
 
         verify(service).get(simCardId);
     }
@@ -126,8 +120,8 @@ public class MinutesEndpointsTest {
         mvc.perform(get(uriConstrainViolation + minutesPath)
                 .contextPath(contextPath))
                 .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.errorCode").value(ErrorCode.VALIDATION_EXCEPTION.value()))
-                .andExpect(jsonPath("$.errorText").value("getMinutes.id: must be greater than 0"));
+                .andExpect(jsonPath(JsonExpressions.ERROR_CODE).value(ErrorCode.VALIDATION_EXCEPTION.value()))
+                .andExpect(jsonPath(JsonExpressions.ERROR_TEXT).value("getMinutes.id: must be greater than 0"));
 
         verify(service, never()).get(wrongId);
     }
@@ -135,11 +129,13 @@ public class MinutesEndpointsTest {
     @Test
     public void checkValidationOnAdd() throws Exception {
         mvc.perform(post(uriConstrainViolation + minutesPath)
-                .param("amount", wrongAmount.toString())
+                .param(JsonExpressions.AMOUNT_PARAMETER, wrongAmount.toString())
                 .contextPath(contextPath))
                 .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.errorCode").value(ErrorCode.VALIDATION_EXCEPTION.value()))
-                .andExpect(jsonPath("$.errorText").value("addMinutes.id: must be greater than 0"));
+                .andExpect(jsonPath(JsonExpressions.ERROR_CODE).value(ErrorCode.VALIDATION_EXCEPTION.value()))
+                .andExpect(jsonPath(JsonExpressions.ERROR_TEXT, containsString("must be greater than 0")))
+                .andExpect(jsonPath(JsonExpressions.ERROR_TEXT, containsString("addMinutes.id")))
+                .andExpect(jsonPath(JsonExpressions.ERROR_TEXT, containsString("addMinutes.amount")));
 
         verify(service, never()).add(wrongId, wrongAmount);
     }
@@ -147,11 +143,13 @@ public class MinutesEndpointsTest {
     @Test
     public void checkValidationOnSubtract() throws Exception {
         mvc.perform(delete(uriConstrainViolation + minutesPath)
-                .param("amount", wrongAmount.toString())
+                .param(JsonExpressions.AMOUNT_PARAMETER, wrongAmount.toString())
                 .contextPath(contextPath))
                 .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.errorCode").value(ErrorCode.VALIDATION_EXCEPTION.value()))
-                .andExpect(jsonPath("$.errorText").value("subtractMinutes.id: must be greater than 0"));
+                .andExpect(jsonPath(JsonExpressions.ERROR_CODE).value(ErrorCode.VALIDATION_EXCEPTION.value()))
+                .andExpect(jsonPath(JsonExpressions.ERROR_TEXT, containsString("must be greater than 0")))
+                .andExpect(jsonPath(JsonExpressions.ERROR_TEXT, containsString("subtractMinutes.id")))
+                .andExpect(jsonPath(JsonExpressions.ERROR_TEXT, containsString("subtractMinutes.amount")));
 
         verify(service, never()).subtract(wrongId, wrongAmount);
     }

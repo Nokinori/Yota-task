@@ -5,6 +5,7 @@ import com.nokinori.api.io.GigabytesRs;
 import com.nokinori.api.io.SimCardRs;
 import com.nokinori.services.api.BillingService;
 import com.nokinori.services.exceptions.NotFoundException;
+import com.nokinori.utils.JsonExpressions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -18,10 +19,15 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.Arrays;
 import java.util.function.Supplier;
 
-import static com.nokinori.api.endpoints.mappings.PathMappings.CONTEXT_PATH;
-import static com.nokinori.api.endpoints.mappings.PathMappings.GIGABYTES_PATH;
-import static com.nokinori.api.endpoints.mappings.PathMappings.SIM_CARD_PATH;
+import static com.nokinori.utils.TestDataHolder.amount;
+import static com.nokinori.utils.TestDataHolder.contextPath;
+import static com.nokinori.utils.TestDataHolder.gigabytesPath;
+import static com.nokinori.utils.TestDataHolder.simCardId;
+import static com.nokinori.utils.TestDataHolder.simCardPath;
+import static com.nokinori.utils.TestDataHolder.wrongAmount;
+import static com.nokinori.utils.TestDataHolder.wrongId;
 import static java.time.LocalDateTime.now;
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.BDDMockito.willReturn;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.never;
@@ -32,25 +38,15 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+//import static org.mockito.ArgumentMatchers.contains;
+
 @RunWith(SpringRunner.class)
 @WebMvcTest(GigabytesEndpoints.class)
 public class GigabytesEndpointsTest {
 
-    private final Long simCardId = 1001L;
+    private final String uri = simCardPath + simCardId;
 
-    private final Long wrongId = -1001L;
-
-    private final String contextPath = CONTEXT_PATH;
-
-    private final String uri = contextPath + SIM_CARD_PATH + "/" + simCardId;
-
-    private final String uriConstrainViolation = contextPath + SIM_CARD_PATH + "/" + wrongId;
-
-    private final String gigabytesPath = GIGABYTES_PATH;
-
-    private final Integer amount = 100;
-
-    private final Integer wrongAmount = 100;
+    private final String uriConstrainViolation = simCardPath + wrongId;
 
     private final Supplier<GigabytesRs> gigabytesRsSupplier = () ->
             GigabytesRs.builder()
@@ -82,17 +78,17 @@ public class GigabytesEndpointsTest {
         mvc.perform(get(uri + gigabytesPath)
                 .contextPath(contextPath))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.simCardId").value(simCardId))
-                .andExpect(jsonPath("$.gigabytesPacks[0].amount").value(amount))
-                .andExpect(jsonPath("$.gigabytesPacks[1].amount").value(amount))
-                .andExpect(jsonPath("$.minutesPacks").doesNotExist());
+                .andExpect(jsonPath(JsonExpressions.SIM_CARD_ID).value(simCardId))
+                .andExpect(jsonPath(JsonExpressions.GIGABYTES_PACKS + "[0].amount").value(amount))
+                .andExpect(jsonPath(JsonExpressions.GIGABYTES_PACKS + "[1].amount").value(amount))
+                .andExpect(jsonPath(JsonExpressions.MINUTES_PACKS).doesNotExist());
 
         verify(service).get(simCardId);
     }
 
     @Test
     public void addGigabytesForSimCard() throws Exception {
-        mvc.perform(post(uri + gigabytesPath).param("amount", amount.toString())
+        mvc.perform(post(uri + gigabytesPath).param(JsonExpressions.AMOUNT_PARAMETER, amount.toString())
                 .contextPath(contextPath))
                 .andExpect(status().isCreated());
 
@@ -101,7 +97,7 @@ public class GigabytesEndpointsTest {
 
     @Test
     public void deleteGigabytesForSimCard() throws Exception {
-        mvc.perform(delete(uri + gigabytesPath).param("amount", amount.toString())
+        mvc.perform(delete(uri + gigabytesPath).param(JsonExpressions.AMOUNT_PARAMETER, amount.toString())
                 .contextPath(contextPath))
                 .andExpect(status().isNoContent());
 
@@ -116,7 +112,7 @@ public class GigabytesEndpointsTest {
         mvc.perform(get(uri + gigabytesPath)
                 .contextPath(contextPath))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.errorCode").value(ErrorCode.NOT_FOUND.value()));
+                .andExpect(jsonPath(JsonExpressions.ERROR_CODE).value(ErrorCode.NOT_FOUND.value()));
 
         verify(service).get(simCardId);
     }
@@ -126,8 +122,8 @@ public class GigabytesEndpointsTest {
         mvc.perform(get(uriConstrainViolation + gigabytesPath)
                 .contextPath(contextPath))
                 .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.errorCode").value(ErrorCode.VALIDATION_EXCEPTION.value()))
-                .andExpect(jsonPath("$.errorText").value("getGigabytes.id: must be greater than 0"));
+                .andExpect(jsonPath(JsonExpressions.ERROR_CODE).value(ErrorCode.VALIDATION_EXCEPTION.value()))
+                .andExpect(jsonPath(JsonExpressions.ERROR_TEXT).value("getGigabytes.id: must be greater than 0"));
 
         verify(service, never()).get(wrongId);
     }
@@ -135,11 +131,13 @@ public class GigabytesEndpointsTest {
     @Test
     public void checkValidationOnAdd() throws Exception {
         mvc.perform(post(uriConstrainViolation + gigabytesPath)
-                .param("amount", wrongAmount.toString())
+                .param(JsonExpressions.AMOUNT_PARAMETER, wrongAmount.toString())
                 .contextPath(contextPath))
                 .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.errorCode").value(ErrorCode.VALIDATION_EXCEPTION.value()))
-                .andExpect(jsonPath("$.errorText").value("addGigabytes.id: must be greater than 0"));
+                .andExpect(jsonPath(JsonExpressions.ERROR_CODE).value(ErrorCode.VALIDATION_EXCEPTION.value()))
+                .andExpect(jsonPath(JsonExpressions.ERROR_TEXT, containsString("must be greater than 0")))
+                .andExpect(jsonPath(JsonExpressions.ERROR_TEXT, containsString("addGigabytes.id")))
+                .andExpect(jsonPath(JsonExpressions.ERROR_TEXT, containsString("addGigabytes.amount")));
 
         verify(service, never()).add(wrongId, wrongAmount);
     }
@@ -147,11 +145,13 @@ public class GigabytesEndpointsTest {
     @Test
     public void checkValidationOnSubtract() throws Exception {
         mvc.perform(delete(uriConstrainViolation + gigabytesPath)
-                .param("amount", wrongAmount.toString())
+                .param(JsonExpressions.AMOUNT_PARAMETER, wrongAmount.toString())
                 .contextPath(contextPath))
                 .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.errorCode").value(ErrorCode.VALIDATION_EXCEPTION.value()))
-                .andExpect(jsonPath("$.errorText").value("subtractGigabytes.id: must be greater than 0"));
+                .andExpect(jsonPath(JsonExpressions.ERROR_CODE).value(ErrorCode.VALIDATION_EXCEPTION.value()))
+                .andExpect(jsonPath(JsonExpressions.ERROR_TEXT, containsString("must be greater than 0")))
+                .andExpect(jsonPath(JsonExpressions.ERROR_TEXT, containsString("subtractGigabytes.id")))
+                .andExpect(jsonPath(JsonExpressions.ERROR_TEXT, containsString("subtractGigabytes.amount")));
 
         verify(service, never()).subtract(wrongId, wrongAmount);
     }

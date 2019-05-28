@@ -5,6 +5,7 @@ import com.nokinori.services.api.SimCardService;
 import com.nokinori.services.exceptions.NotFoundException;
 import com.nokinori.services.exceptions.SimCardActivationException;
 import com.nokinori.services.exceptions.SimCardBlockageException;
+import com.nokinori.utils.JsonExpressions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,10 +15,12 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static com.nokinori.api.endpoints.mappings.PathMappings.CONTEXT_PATH;
-import static com.nokinori.api.endpoints.mappings.PathMappings.SIM_CARD_ACTIVATE_PATH;
-import static com.nokinori.api.endpoints.mappings.PathMappings.SIM_CARD_BLOCK_PATH;
-import static com.nokinori.api.endpoints.mappings.PathMappings.SIM_CARD_PATH;
+import static com.nokinori.utils.TestDataHolder.activatePath;
+import static com.nokinori.utils.TestDataHolder.blockPath;
+import static com.nokinori.utils.TestDataHolder.contextPath;
+import static com.nokinori.utils.TestDataHolder.simCardId;
+import static com.nokinori.utils.TestDataHolder.simCardPath;
+import static com.nokinori.utils.TestDataHolder.wrongId;
 import static org.mockito.BDDMockito.verify;
 import static org.mockito.BDDMockito.willDoNothing;
 import static org.mockito.BDDMockito.willThrow;
@@ -30,19 +33,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(SimCardEndpoints.class)
 public class SimCardEndpointsTest {
 
-    private final Long simCardId = 1001L;
+    private final String uri = simCardPath + simCardId;
 
-    private final Long wrongId = -1001L;
-
-    private final String contextPath = CONTEXT_PATH;
-
-    private final String uri = contextPath + SIM_CARD_PATH + "/" + simCardId;
-
-    private final String uriConstrainViolation = contextPath + SIM_CARD_PATH + "/" + wrongId;
-
-    private final String activatePath = SIM_CARD_ACTIVATE_PATH;
-
-    private final String blockPath = SIM_CARD_BLOCK_PATH;
+    private final String uriConstrainViolation = simCardPath + wrongId;
 
     @Autowired
     private MockMvc mvc;
@@ -85,7 +78,7 @@ public class SimCardEndpointsTest {
         mvc.perform(put(uri + activatePath)
                 .contextPath(contextPath))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.errorCode").value(ErrorCode.NOT_FOUND.value()));
+                .andExpect(jsonPath(JsonExpressions.ERROR_CODE).value(ErrorCode.NOT_FOUND.value()));
 
         verify(service).activate(simCardId);
     }
@@ -98,7 +91,7 @@ public class SimCardEndpointsTest {
         mvc.perform(put(uri + blockPath)
                 .contextPath(contextPath))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.errorCode").value(ErrorCode.NOT_FOUND.value()));
+                .andExpect(jsonPath(JsonExpressions.ERROR_CODE).value(ErrorCode.NOT_FOUND.value()));
 
         verify(service).block(simCardId);
     }
@@ -111,9 +104,9 @@ public class SimCardEndpointsTest {
         mvc.perform(put(uri + activatePath)
                 .contextPath(contextPath))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errorCode")
+                .andExpect(jsonPath(JsonExpressions.ERROR_CODE)
                         .value(ErrorCode.ACTIVATION_EXCEPTION.value()))
-                .andExpect(jsonPath("$.errorText").value("Activation exception"));
+                .andExpect(jsonPath(JsonExpressions.ERROR_TEXT).value("Activation exception"));
 
         verify(service).activate(simCardId);
     }
@@ -126,8 +119,8 @@ public class SimCardEndpointsTest {
         mvc.perform(put(uri + blockPath)
                 .contextPath(contextPath))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errorCode").value(ErrorCode.BLOCKAGE_EXCEPTION.value()))
-                .andExpect(jsonPath("$.errorText").value("Blockage exception"));
+                .andExpect(jsonPath(JsonExpressions.ERROR_CODE).value(ErrorCode.BLOCKAGE_EXCEPTION.value()))
+                .andExpect(jsonPath(JsonExpressions.ERROR_TEXT).value("Blockage exception"));
 
         verify(service).block(simCardId);
     }
@@ -137,8 +130,8 @@ public class SimCardEndpointsTest {
         mvc.perform(put(uriConstrainViolation + activatePath)
                 .contextPath(contextPath))
                 .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.errorCode").value(ErrorCode.VALIDATION_EXCEPTION.value()))
-                .andExpect(jsonPath("$.errorText").value("activateSimCard.id: must be greater than 0"));
+                .andExpect(jsonPath(JsonExpressions.ERROR_CODE).value(ErrorCode.VALIDATION_EXCEPTION.value()))
+                .andExpect(jsonPath(JsonExpressions.ERROR_TEXT).value("activateSimCard.id: must be greater than 0"));
 
         verify(service, never()).block(simCardId);
     }
@@ -148,8 +141,8 @@ public class SimCardEndpointsTest {
         mvc.perform(put(uriConstrainViolation + blockPath)
                 .contextPath(contextPath))
                 .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.errorCode").value(ErrorCode.VALIDATION_EXCEPTION.value()))
-                .andExpect(jsonPath("$.errorText").value("blockSimCard.id: must be greater than 0"));
+                .andExpect(jsonPath(JsonExpressions.ERROR_CODE).value(ErrorCode.VALIDATION_EXCEPTION.value()))
+                .andExpect(jsonPath(JsonExpressions.ERROR_TEXT).value("blockSimCard.id: must be greater than 0"));
 
         verify(service, never()).block(simCardId);
     }

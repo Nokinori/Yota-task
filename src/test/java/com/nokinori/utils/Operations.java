@@ -5,12 +5,14 @@ import lombok.Setter;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import static com.nokinori.api.endpoints.mappings.PathMappings.CONTEXT_PATH;
-import static com.nokinori.api.endpoints.mappings.PathMappings.GIGABYTES_PATH;
-import static com.nokinori.api.endpoints.mappings.PathMappings.MINUTES_PATH;
-import static com.nokinori.api.endpoints.mappings.PathMappings.SIM_CARD_ACTIVATE_PATH;
-import static com.nokinori.api.endpoints.mappings.PathMappings.SIM_CARD_BLOCK_PATH;
-import static com.nokinori.api.endpoints.mappings.PathMappings.SIM_CARD_PATH;
+import static com.nokinori.utils.JsonExpressions.AMOUNT_PARAMETER;
+import static com.nokinori.utils.JsonExpressions.SIM_CARD_ID;
+import static com.nokinori.utils.TestDataHolder.activatePath;
+import static com.nokinori.utils.TestDataHolder.blockPath;
+import static com.nokinori.utils.TestDataHolder.contextPath;
+import static com.nokinori.utils.TestDataHolder.gigabytesPath;
+import static com.nokinori.utils.TestDataHolder.minutesPath;
+import static com.nokinori.utils.TestDataHolder.simCardPath;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -18,107 +20,94 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@Setter
 public class Operations {
 
-
-    private final String contextPath = CONTEXT_PATH;
-
-    private final String uri = contextPath + SIM_CARD_PATH + "/";
-
-    private final String activatePath = SIM_CARD_ACTIVATE_PATH;
-
-    private final String blockPath = SIM_CARD_BLOCK_PATH;
-
-    private final String minutesPath = MINUTES_PATH;
-
-    private final String gigabytesPath = GIGABYTES_PATH;
-
+    @Setter
     private MockMvc mvc;
 
     public Integer createSimCard() throws Exception {
-        MvcResult mvcResult = mvc.perform(post(uri).contextPath(contextPath))
+        MvcResult mvcResult = mvc.perform(post(simCardPath).contextPath(contextPath))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.simCardId").isNotEmpty())
-                .andExpect(jsonPath("$.minutesPacks").isEmpty())
-                .andExpect(jsonPath("$.gigabytesPacks").isEmpty())
+                .andExpect(jsonPath(SIM_CARD_ID).isNotEmpty())
+                .andExpect(jsonPath(JsonExpressions.MINUTES_PACKS).isEmpty())
+                .andExpect(jsonPath(JsonExpressions.GIGABYTES_PACKS).isEmpty())
                 .andReturn();
 
         String body = mvcResult.getResponse()
                 .getContentAsString();
 
         return JsonPath.parse(body)
-                .read("$.simCardId");
+                .read(SIM_CARD_ID);
     }
 
     public void blockSimCard(int id) throws Exception {
-        mvc.perform(put(uri + id + blockPath)
+        mvc.perform(put(simCardPath + id + blockPath)
                 .contextPath(contextPath))
                 .andExpect(status().isOk());
     }
 
     public void activateSimCard(int id) throws Exception {
-        mvc.perform(put(uri + id + activatePath)
+        mvc.perform(put(simCardPath + id + activatePath)
                 .contextPath(contextPath))
                 .andExpect(status().isOk());
     }
 
     public void getMinutesPack(int id, Integer amountToValidate) throws Exception {
-        mvc.perform(get(uri + id + minutesPath)
+        mvc.perform(get(simCardPath + id + minutesPath)
                 .contextPath(contextPath))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.simCardId").value(id))
-                .andExpect(jsonPath("$.minutesPacks[0].amount").value(amountToValidate))
-                .andExpect(jsonPath("$.gigabytesPacks").doesNotExist());
+                .andExpect(jsonPath(SIM_CARD_ID).value(id))
+                .andExpect(jsonPath(JsonExpressions.MINUTES_PACKS + "[0].amount").value(amountToValidate))
+                .andExpect(jsonPath(JsonExpressions.GIGABYTES_PACKS).doesNotExist());
     }
 
     public void getMinutesPack(int id) throws Exception {
-        mvc.perform(get(uri + id + minutesPath)
+        mvc.perform(get(simCardPath + id + minutesPath)
                 .contextPath(contextPath))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.simCardId").value(id))
-                .andExpect(jsonPath("$.minutesPacks").isEmpty())
-                .andExpect(jsonPath("$.gigabytesPacks").doesNotExist());
+                .andExpect(jsonPath(SIM_CARD_ID).value(id))
+                .andExpect(jsonPath(JsonExpressions.MINUTES_PACKS).isEmpty())
+                .andExpect(jsonPath(JsonExpressions.GIGABYTES_PACKS).doesNotExist());
     }
 
     public void getGigabytesPack(int id, Integer amountToValidate) throws Exception {
-        mvc.perform(get(uri + id + gigabytesPath)
+        mvc.perform(get(simCardPath + id + gigabytesPath)
                 .contextPath(contextPath))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.simCardId").value(id))
-                .andExpect(jsonPath("$.gigabytesPacks[0].amount").value(amountToValidate))
-                .andExpect(jsonPath("$.minutesPacks").doesNotExist());
+                .andExpect(jsonPath(SIM_CARD_ID).value(id))
+                .andExpect(jsonPath(JsonExpressions.GIGABYTES_PACKS + "[0].amount").value(amountToValidate))
+                .andExpect(jsonPath(JsonExpressions.MINUTES_PACKS).doesNotExist());
     }
 
     public void getGigabytesPack(int id) throws Exception {
-        mvc.perform(get(uri + id + gigabytesPath)
+        mvc.perform(get(simCardPath + id + gigabytesPath)
                 .contextPath(contextPath))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.simCardId").value(id))
-                .andExpect(jsonPath("$.gigabytesPacks").isEmpty())
-                .andExpect(jsonPath("$.minutesPacks").doesNotExist());
+                .andExpect(jsonPath(SIM_CARD_ID).value(id))
+                .andExpect(jsonPath(JsonExpressions.GIGABYTES_PACKS).isEmpty())
+                .andExpect(jsonPath(JsonExpressions.MINUTES_PACKS).doesNotExist());
     }
 
     public void addMinutesPack(int id, Integer amount) throws Exception {
-        mvc.perform(post(uri + id + minutesPath).param("amount", amount.toString())
+        mvc.perform(post(simCardPath + id + minutesPath).param(AMOUNT_PARAMETER, amount.toString())
                 .contextPath(contextPath))
                 .andExpect(status().isCreated());
     }
 
     public void addGigabytesPack(int id, Integer amount) throws Exception {
-        mvc.perform(post(uri + id + gigabytesPath).param("amount", amount.toString())
+        mvc.perform(post(simCardPath + id + gigabytesPath).param(AMOUNT_PARAMETER, amount.toString())
                 .contextPath(contextPath))
                 .andExpect(status().isCreated());
     }
 
     public void deleteMinutesPack(int id, Integer amount) throws Exception {
-        mvc.perform(delete(uri + id + minutesPath).param("amount", amount.toString())
+        mvc.perform(delete(simCardPath + id + minutesPath).param(AMOUNT_PARAMETER, amount.toString())
                 .contextPath(contextPath))
                 .andExpect(status().isNoContent());
     }
 
     public void deleteGigabytesPack(int id, Integer amount) throws Exception {
-        mvc.perform(delete(uri + id + gigabytesPath).param("amount", amount.toString())
+        mvc.perform(delete(simCardPath + id + gigabytesPath).param(AMOUNT_PARAMETER, amount.toString())
                 .contextPath(contextPath))
                 .andExpect(status().isNoContent());
     }

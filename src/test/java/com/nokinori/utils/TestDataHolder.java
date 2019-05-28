@@ -7,7 +7,10 @@ import lombok.Getter;
 @Data
 @Getter
 public class TestDataHolder {
-    public static Long notExistId = 1001L;
+
+    public static Long simCardId = 1001L;
+
+    public static Long notExistId = 999L;
 
     public static Long wrongId = -1001L;
 

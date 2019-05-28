@@ -1,6 +1,7 @@
 package com.nokinori.integration.tests;
 
 import com.nokinori.api.handlers.ErrorCode;
+import com.nokinori.utils.JsonExpressions;
 import com.nokinori.utils.Operations;
 import org.junit.Before;
 import org.junit.Test;
@@ -11,8 +12,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static com.nokinori.utils.JsonExpressions.errorCode;
-import static com.nokinori.utils.JsonExpressions.errorText;
 import static com.nokinori.utils.TestDataHolder.activatePath;
 import static com.nokinori.utils.TestDataHolder.blockPath;
 import static com.nokinori.utils.TestDataHolder.contextPath;
@@ -52,8 +51,8 @@ public class SimCardIntegrationTests {
         mvc.perform(put(simCardPath + id + activatePath)
                 .contextPath(contextPath))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath(errorCode).value(ErrorCode.ACTIVATION_EXCEPTION.value()))
-                .andExpect(jsonPath(errorText).value("Sim-card with id: " + id + " already activated"));
+                .andExpect(jsonPath(JsonExpressions.ERROR_CODE).value(ErrorCode.ACTIVATION_EXCEPTION.value()))
+                .andExpect(jsonPath(JsonExpressions.ERROR_TEXT).value("Sim-card with id: " + id + " already activated"));
     }
 
     @Test
@@ -64,8 +63,8 @@ public class SimCardIntegrationTests {
         mvc.perform(put(simCardPath + id + blockPath)
                 .contextPath(contextPath))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath(errorCode).value(ErrorCode.BLOCKAGE_EXCEPTION.value()))
-                .andExpect(jsonPath(errorText).value("Sim-card with id: " + id + " already blocked"));
+                .andExpect(jsonPath(JsonExpressions.ERROR_CODE).value(ErrorCode.BLOCKAGE_EXCEPTION.value()))
+                .andExpect(jsonPath(JsonExpressions.ERROR_TEXT).value("Sim-card with id: " + id + " already blocked"));
     }
 
     @Test
@@ -80,7 +79,7 @@ public class SimCardIntegrationTests {
         mvc.perform(get(simCardPath + notExistId + minutesPath)
                 .contextPath(contextPath))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath(errorCode).value(ErrorCode.NOT_FOUND.value()));
+                .andExpect(jsonPath(JsonExpressions.ERROR_CODE).value(ErrorCode.NOT_FOUND.value()));
     }
 
     @Test
@@ -88,8 +87,8 @@ public class SimCardIntegrationTests {
         mvc.perform(put(simCardPath + wrongId + blockPath)
                 .contextPath(contextPath))
                 .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath(errorCode).value(ErrorCode.VALIDATION_EXCEPTION.value()))
-                .andExpect(jsonPath(errorText).value("blockSimCard.id: must be greater than 0"));
+                .andExpect(jsonPath(JsonExpressions.ERROR_CODE).value(ErrorCode.VALIDATION_EXCEPTION.value()))
+                .andExpect(jsonPath(JsonExpressions.ERROR_TEXT).value("blockSimCard.id: must be greater than 0"));
     }
 
     @Test
@@ -97,8 +96,8 @@ public class SimCardIntegrationTests {
         mvc.perform(put(simCardPath + wrongId + activatePath)
                 .contextPath(contextPath))
                 .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath(errorCode).value(ErrorCode.VALIDATION_EXCEPTION.value()))
-                .andExpect(jsonPath(errorText).value("activateSimCard.id: must be greater than 0"));
+                .andExpect(jsonPath(JsonExpressions.ERROR_CODE).value(ErrorCode.VALIDATION_EXCEPTION.value()))
+                .andExpect(jsonPath(JsonExpressions.ERROR_TEXT).value("activateSimCard.id: must be greater than 0"));
 
     }
 }
